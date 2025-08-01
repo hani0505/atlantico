@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { v4: uuidv4 } = require('uuid');
 const config = require("../configs/auth");
 const fs = require('fs');
@@ -62,7 +63,7 @@ function cadastrar(req, res) {
 
 // Login
 function login(req, res) {
-  const { nome, senha } = req.body;
+  const { nome, senha, perfil } = req.body;
 
   if (!nome || !senha) {
     throw new AppError("Preencha nome e senha", 400);
@@ -71,6 +72,8 @@ function login(req, res) {
   const usuarios = lerUser();
 
   const user = usuarios.find(u => u.nome === nome && u.senha === senha);
+  console.log('JWT Secret:', config.jwt.secret);
+
   if (!user) {
     throw new AppError("Credenciais inválidas", 401);
   }
@@ -85,7 +88,7 @@ function login(req, res) {
     { expiresIn: config.jwt.expiresIn }
   );
 
-  return res.json( {token} ); 
+   return res.json(  token ); 
 }
 
 // Pega os dados do usuário logado (depois do middleware que popula req.user)
@@ -97,10 +100,12 @@ function getCheck(req, res) {
 // Listar nomes das salas (GET)
 function salas(req, res) {
   const salas = lerSalas();
-  const nomesSalas = salas.flatMap(salaObj =>
-    Object.keys(salaObj).filter(key => key.startsWith('sala'))
-  );
+    const nomesSalas = salas.map(salaObj => {
+    const chaveSala = Object.keys(salaObj).find(key => key.startsWith('sala'));
+    return chaveSala;
+  }).filter(Boolean);
   res.json(nomesSalas);
+
 }
 
 // Reservar sala (POST)
@@ -115,25 +120,29 @@ function reservar(req, res) {
   const dataNow = new Date();
   const dataFormatada = dataNow.toISOString();
 
-  let salas = lerSalas();
+  let salas = lerSalas(); // deve retornar seu array do JSON
 
-  const indexSala = salas.findIndex(obj => obj[sala] !== undefined);
+  const indexSala = salas.findIndex(obj => obj.hasOwnProperty(sala));
   if (indexSala === -1) {
     return res.status(404).json({ mensagem: "Sala não encontrada" });
   }
 
-  const reserva = {
-    nome: aluno,
+  // Adiciona a reserva
+  salas[indexSala][sala].push({
+    aluno,
     data: dataFormatada
-  };
+  });
 
-  salas[indexSala][sala].push(reserva);
   salas[indexSala].data = dataFormatada;
 
-  salvarSalas(salas);
+  salvarSalas(salas); // função para escrever no arquivo JSON
 
-  res.status(201).json({ mensagem: "Reserva realizada com sucesso", reserva });
+  return res.json({
+    mensagem: `Reserva feita com sucesso para ${sala}`,
+    usuario: req.user
+  });
 }
+
 
 // Listar reservas para admins (GET)
 function reservasAdm(req, res) {
