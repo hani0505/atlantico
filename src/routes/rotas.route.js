@@ -4,9 +4,10 @@ const middlewarAdm = require('../middleware/onlyAdm')
 const middlewar = require('../middleware/ensureAuth')
 
 const router = Router()
-
+// nome, perfil, senha
 router.post('/cadastrar', controller.cadastrar)
 // post
+// senha, usuario
 router.post('/login', controller.login )
 // get
 router.get('/check', middlewar , controller.getCheck)

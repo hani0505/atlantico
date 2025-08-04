@@ -37,7 +37,8 @@ function cadastrar(req, res) {
   const { nome, perfil, senha } = req.body;
 
   if (!nome || !senha || !perfil) {
-    throw new AppError("Preencha todos os dados (nome, perfil e senha)", 400);
+  
+      res.status(400).send("preencha todos os dados")
   }
 
   const usuarios = lerUser();
@@ -45,7 +46,8 @@ function cadastrar(req, res) {
   // Verifica se usuário já existe pelo nome
   const existe = usuarios.some(u => u.nome === nome);
   if (existe) {
-    throw new AppError("Usuário já cadastrado", 400);
+  
+      res.status(400).send("usuario já cadastrado")
   }
 
   const usuario = {
@@ -66,7 +68,8 @@ function login(req, res) {
   const { nome, senha, perfil } = req.body;
 
   if (!nome || !senha) {
-    throw new AppError("Preencha nome e senha", 400);
+  
+      res.status(400).send("preencha nome e senha")
   }
 
   const usuarios = lerUser();
@@ -75,7 +78,8 @@ function login(req, res) {
   console.log('JWT Secret:', config.jwt.secret);
 
   if (!user) {
-    throw new AppError("Credenciais inválidas", 401);
+  
+    res.status(401).send("Credenciais inválidas")
   }
 
   const token = jwt.sign(
@@ -110,11 +114,12 @@ function salas(req, res) {
 
 // Reservar sala (POST)
 function reservar(req, res) {
-  const { sala } = req.body;
+  const { sala } = req.body; //acessa o valor da chave sala
   const aluno = req.user.nome;
 
   if (!sala) {
-    throw new AppError("Informe a sala para reserva", 400);
+
+      res.status(400).send("informe a sala reservada")
   }
 
   const dataNow = new Date();
@@ -122,7 +127,8 @@ function reservar(req, res) {
 
   let salas = lerSalas(); // deve retornar seu array do JSON
 
-  const indexSala = salas.findIndex(obj => obj.hasOwnProperty(sala));
+  // acessa o indice dala ex: se for zero, vai acessar o primeiro objeto(sala1 e data)
+  const indexSala = salas.findIndex(obj => obj.hasOwnProperty(sala)); //vai acessar o objeto que tenha a propriedade de sala
   if (indexSala === -1) {
     return res.status(404).json({ mensagem: "Sala não encontrada" });
   }

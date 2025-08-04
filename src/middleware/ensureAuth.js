@@ -7,7 +7,8 @@ function ensureAuthenticated(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    throw new AppError("Token não enviado", 401);
+
+    res.status(401).send("token não enviado")
   }
 
   try {
@@ -15,7 +16,7 @@ function ensureAuthenticated(req, res, next) {
     req.user = decoded; // coloca o usuário decodificado na req
     next(); // segue para o controller
   } catch (err) {
-    throw new AppError("Token inválido", 403);
+    res.status(403).send("token inválido")
   }
 }
 
